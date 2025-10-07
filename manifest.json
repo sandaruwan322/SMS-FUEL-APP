@@ -2,11 +2,11 @@
   "name": "Fuel Log Web App",
   "short_name": "Fuel Log",
   "description": "A web application to log fuel usage and generate reports.",
-  "start_url": "/Smsfuel.html",
+  "start_url": "/SMS-FUEL-APP/Smsfuel.html",
   "display": "standalone",
   "background_color": "#E0F7FA",
   "theme_color": "#004D40",
-  "scope": "/",
+  "scope": "SMS-FUEL-APP/",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
