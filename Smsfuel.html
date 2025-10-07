@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Log Web App</title>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        /* Your existing CSS remains the same */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #E0F7FA;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            position: relative;
+        }
+
+        h1 {
+            color: #004D40;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .fixed-info {
+            background-color: #E0F7FA;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            width: 200px;
+            min-width: 100px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .fixed-info p {
+            margin: 5px 0;
+            color: #004D40;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            color: #004D40;
+            font-weight: bold;
+            margin-bottom: 3px;
+            font-size: 12px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .save-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .edit-btn {
+            background-color: #FFC107;
+            color: white;
+        }
+
+        .download-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .notification {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            animation: fadeIn 0.5s, fadeOut 0.5s 2.5s;
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .disabled-form {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        #dragbar {
+            width: 5px;
+            background-color: #ccc;
+            cursor: col-resize;
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+        }
+
+        #main-content {
+            flex: 1;
+            padding-left: 20px;
+        }
+
+        .watermark {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #888;
+            opacity: 0.5;
+            font-style: italic;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                flex-direction: column;
+                padding: 10px;
+            }
+            .fixed-info {
+                width: 100% !important;
+                margin-bottom: 10px;
+            }
+            #dragbar {
+                display: none;
+            }
+            #main-content {
+                padding-left: 0;
+            }
+            .watermark {
+                font-size: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Fuel Log Entry</h1>
+        <form id="fixedInfoForm" class="fixed-info">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="designation">Designation:</label>
+                <input type="text" id="designation" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <input type="text" id="department" required>
+            </div>
+            <div class="form-group">
+                <label for="epfNo">EPF No:</label>
+                <input type="text" id="epfNo" required>
+            </div>
+            <div class="form-group">
+                <label for="vehicleType">Vehicle Type:</label>
+                <input type="text" id="vehicleType" required>
+            </div>
+            <div class="form-group">
+                <label for="vehicleNo">Vehicle No:</label>
+                <input type="text" id="vehicleNo" required>
+            </div>
+            <div class="form-group">
+                <label for="budgetMonth">Budget Month (mm_yyyy):</label>
+                <input type="text" id="budgetMonth" value="10_2025" required>
+            </div>
+            <button type="submit" class="btn save-btn">Save Fixed Info</button>
+        </form>
+        <div id="main-content">
+            <form id="fuelForm">
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="startMeter">Start Meter:</label>
+                    <input type="number" id="startMeter" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="endMeter">End Meter:</label>
+                    <input type="number" id="endMeter" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="liter">Liter:</label>
+                    <input type="number" id="liter" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="costCompany">Cost (Rs.) Company:</label>
+                    <input type="number" id="costCompany" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="costPrivet">Cost (Rs.) Privet Tour:</label>
+                    <input type="number" id="costPrivet" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="remark">Remark:</label>
+                    <input type="text" id="remark">
+                </div>
+                <button type="submit" class="btn save-btn">Save</button>
+                <button type="button" class="btn download-btn" onclick="downloadExcel()">Download Excel</button>
+            </form>
+            <div id="notification" class="notification"></div>
+        </div>
+        <div class="watermark">Powered by k2s system</div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(() => console.log('Service Worker registered'))
+            .catch((error) => console.error('Service Worker registration failed:', error));
+        }
+
+        let fixedInfo = JSON.parse(localStorage.getItem('fixedInfo')) || {};
+        let isDragging = false;
+
+        const container = document.querySelector('.container');
+        const fixedForm = document.getElementById('fixedInfoForm');
+        const mainContent = document.getElementById('main-content');
+
+        function populateFixedForm() {
+            document.getElementById('name').value = fixedInfo.Name || '';
+            document.getElementById('designation').value = fixedInfo.Designation || '';
+            document.getElementById('department').value = fixedInfo.Department || '';
+            document.getElementById('epfNo').value = fixedInfo['EPF No'] || '';
+            document.getElementById('vehicleType').value = fixedInfo['Vehicle Type'] || '';
+            document.getElementById('vehicleNo').value = fixedInfo['Vehicle No'] || '';
+            document.getElementById('budgetMonth').value = fixedInfo['Budget Month'] || '10_2025';
+        }
+
+        function createSidebar() {
+            const sidebar = document.createElement('div');
+            sidebar.id = 'sidebar';
+            sidebar.classList.add('fixed-info');
+            sidebar.innerHTML = `
+                <p><strong>Name:</strong> ${fixedInfo.Name}</p>
+                <p><strong>Designation:</strong> ${fixedInfo.Designation}</p>
+                <p><strong>Department:</strong> ${fixedInfo.Department}</p>
+                <p><strong>EPF No:</strong> ${fixedInfo['EPF No']}</p>
+                <p><strong>Vehicle Type:</strong> ${fixedInfo['Vehicle Type']}</p>
+                <p><strong>Vehicle No:</strong> ${fixedInfo['Vehicle No']}</p>
+                <p><strong>Budget Month:</strong> ${fixedInfo['Budget Month']}</p>
+                <button class="btn edit-btn" onclick="editFixedInfo()">Edit Fixed Info</button>
+            `;
+            const dragbar = document.createElement('div');
+            dragbar.id = 'dragbar';
+            sidebar.appendChild(dragbar);
+
+            container.insertBefore(sidebar, mainContent);
+
+            dragbar.addEventListener('mousedown', startDrag);
+            dragbar.addEventListener('touchstart', startDrag);
+
+            function startDrag(e) {
+                e.preventDefault();
+                isDragging = true;
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchmove', onDrag);
+                document.addEventListener('touchend', stopDrag);
+            }
+
+            function onDrag(e) {
+                if (isDragging) {
+                    let pageX = e.pageX || (e.touches && e.touches[0].pageX);
+                    let newWidth = pageX - sidebar.getBoundingClientRect().left;
+                    if (newWidth > 100 && newWidth < 400) {
+                        sidebar.style.width = `${newWidth}px`;
+                    }
+                }
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchmove', onDrag);
+                document.removeEventListener('touchend', stopDrag);
+            }
+        }
+
+        if (Object.keys(fixedInfo).length > 0) {
+            fixedForm.style.display = 'none';
+            createSidebar();
+        } else {
+            fixedForm.style.width = '200px';
+            fixedForm.style.flexShrink = '0';
+        }
+
+        function editFixedInfo() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.remove();
+            }
+            fixedForm.style.display = 'block';
+            populateFixedForm();
+        }
+
+        document.getElementById('fixedInfoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            fixedInfo = {
+                Name: document.getElementById('name').value,
+                Designation: document.getElementById('designation').value,
+                Department: document.getElementById('department').value,
+                'EPF No': document.getElementById('epfNo').value,
+                'Vehicle Type': document.getElementById('vehicleType').value,
+                'Vehicle No': document.getElementById('vehicleNo').value,
+                'Budget Month': document.getElementById('budgetMonth').value
+            };
+            localStorage.setItem('fixedInfo', JSON.stringify(fixedInfo));
+            fixedForm.style.display = 'none';
+            createSidebar();
+            showNotification('Fixed info saved successfully!');
+        });
+
+        document.getElementById('fuelForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (Object.keys(fixedInfo).length === 0) {
+                alert('Please save fixed information first.');
+                return;
+            }
+
+            const dateValue = document.getElementById('date').value;
+            if (!dateValue) {
+                alert('Please select a date.');
+                return;
+            }
+            const [year, month, day] = dateValue.split('-');
+            const date_str = `${month}/${day}/${year}`;
+            const startMeter = parseFloat(document.getElementById('startMeter').value);
+            const endMeter = parseFloat(document.getElementById('endMeter').value);
+            const liter = parseFloat(document.getElementById('liter').value);
+            const costCompany = parseFloat(document.getElementById('costCompany').value) || 0;
+            const costPrivet = parseFloat(document.getElementById('costPrivet').value) || 0;
+            const remark = document.getElementById('remark').value;
+
+            if (isNaN(startMeter) || isNaN(endMeter) || isNaN(liter) || endMeter <= startMeter) {
+                alert('Please enter valid data. End Meter must be greater than Start Meter.');
+                return;
+            }
+
+            const milage = endMeter - startMeter;
+            const monthYear = `${parseInt(month)}_${year}`;
+
+            let fuelLogs = JSON.parse(localStorage.getItem('fuelLogs')) || {};
+            let wsData = fuelLogs[monthYear] || null;
+
+            if (!wsData) {
+                wsData = [
+                    ['Name', fixedInfo.Name],
+                    ['Designation', fixedInfo.Designation],
+                    ['Department', fixedInfo.Department],
+                    ['EPF No', fixedInfo['EPF No']],
+                    ['Vehicle Type', fixedInfo['Vehicle Type']],
+                    ['Vehicle No', fixedInfo['Vehicle No']],
+                    ['Budget Month', monthYear.replace('_', '/')],
+                    [],
+                    ['Ref no', 'Date', 'Start Meter', 'End Meter', 'Milage', 'Liter', 'Cost (Rs.) Company', 'Cost (Rs.) Privet Tour', 'Remark']
+                ];
+                wsData.push([1, date_str, startMeter, endMeter, milage, liter, costCompany, costPrivet, remark]);
+            } else {
+                const lastRow = wsData[wsData.length - 1];
+                const prevEnd = lastRow && lastRow[3] ? lastRow[3] : 0;
+                if (prevEnd && prevEnd !== startMeter) {
+                    if (!confirm(`Start Meter (${startMeter}) doesn't match previous End Meter (${prevEnd}). Continue?`)) {
+                        return;
+                    }
+                }
+                wsData.push([wsData.length - 8, date_str, startMeter, endMeter, milage, liter, costCompany, costPrivet, remark]);
+            }
+
+            fuelLogs[monthYear] = wsData;
+            localStorage.setItem('fuelLogs', JSON.stringify(fuelLogs));
+
+            showNotification('Save successful!');
+            document.getElementById('fuelForm').reset();
+        });
+
+        function downloadExcel() {
+            const fuelLogs = JSON.parse(localStorage.getItem('fuelLogs')) || {};
+            if (Object.keys(fuelLogs).length === 0) {
+                alert('No data found.');
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+            const sortedMonths = Object.keys(fuelLogs).sort();
+
+            sortedMonths.forEach(monthYear => {
+                const wsData = fuelLogs[monthYear];
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                XLSX.utils.book_append_sheet(wb, ws, monthYear);
+            });
+
+            XLSX.writeFile(wb, 'Fuel_Log.xlsx');
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
